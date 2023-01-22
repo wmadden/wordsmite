@@ -29,9 +29,9 @@ function firestoreDataToGame(data: StrictDocumentData): GameEvent {
   };
 }
 
-const GameConverter: FirestoreDataConverter<GameEvent> = {
+const GameEventConverter: FirestoreDataConverter<GameEvent> = {
   toFirestore: (gameEvent) => gameEventToFirestoreData(gameEvent),
   fromFirestore: (snapshot) => firestoreDataToGame(snapshot.data()),
 };
 
-export default GameConverter;
+export default GameEventConverter;
