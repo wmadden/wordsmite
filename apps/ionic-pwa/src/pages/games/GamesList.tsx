@@ -105,7 +105,7 @@ const GameListItem: React.FC<GameListItemProps> = ({ gameId }) => {
           </IonCol>
         </IonRow>
         <IonRow>
-          <IonCol></IonCol>
+          <IonCol>{gameDoc.data?.data()?.name}</IonCol>
         </IonRow>
       </IonGrid>
     </IonItem>
