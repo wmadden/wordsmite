@@ -17,7 +17,10 @@ export default function useHighlightedCellsState({
   onWordHighlighted,
   gameState,
 }: {
-  onWordHighlighted: (word: string) => void;
+  onWordHighlighted: (params: {
+    word: string;
+    highlightedCells: CellCoordinate[];
+  }) => void;
   gameState: GameState;
 }): HighlightedCellsState {
   const [highlightedCells, setHighlightedCells] = useState<CellCoordinate[]>(
@@ -59,7 +62,10 @@ export default function useHighlightedCellsState({
           .join("");
 
         if (highlightedString && dictEnSet.has(highlightedString)) {
-          onWordHighlighted(highlightedString);
+          onWordHighlighted({
+            word: highlightedString,
+            highlightedCells: newValue,
+          });
         }
 
         return newValue;
