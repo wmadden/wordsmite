@@ -7,23 +7,13 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import {
-  collection,
-  collectionGroup,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, orderBy, query, where } from "firebase/firestore";
 import { compact } from "lodash";
 import React from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { useFirestore, useFirestoreCollection, useUser } from "reactfire";
-import {
-  gamesCollectionPath,
-  gameStatesCollectionGroupPath,
-} from "../../firebase/firestorePathBuilders";
+import { gamesCollectionPath } from "../../firebase/firestorePathBuilders";
 import GameConverter from "../../models/dataConverters/GameConverter";
-import GameStateConverter from "../../models/dataConverters/GameStateConverter";
 import { gamesNewUrl } from "../../urls";
 import GamesList from "./GamesList";
 
@@ -51,14 +41,6 @@ const GamesListPage: React.FC = () => {
         authUser.data && where("creatorId", "==", authUser.data?.uid),
         orderBy("createdAt", "desc"),
       ]),
-    ),
-  );
-  const myGameStatesCollection = useFirestoreCollection(
-    query(
-      collectionGroup(firestore, gameStatesCollectionGroupPath()).withConverter(
-        GameStateConverter,
-      ),
-      orderBy("createdAt", "desc"),
     ),
   );
 

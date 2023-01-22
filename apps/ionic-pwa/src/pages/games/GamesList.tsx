@@ -2,26 +2,13 @@ import {
   IonChip,
   IonCol,
   IonGrid,
-  IonIcon,
   IonItem,
   IonList,
   IonProgressBar,
   IonRow,
   IonSkeletonText,
 } from "@ionic/react";
-import {
-  collection,
-  collectionGroup,
-  doc,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
-import {
-  peopleCircleOutline,
-  statsChartOutline,
-  trophyOutline,
-} from "ionicons/icons";
+import { collection, doc, orderBy, query, where } from "firebase/firestore";
 import { compact, uniqBy } from "lodash";
 import React from "react";
 import {
@@ -33,14 +20,10 @@ import {
 import {
   gamesCollectionPath,
   gamesDocPath,
-  gameStatesCollectionGroupPath,
-  gameStatesCollectionPath,
   userProfilesDocPath,
 } from "../../firebase/firestorePathBuilders";
 import GameConverter from "../../models/dataConverters/GameConverter";
-import GameStateConverter from "../../models/dataConverters/GameStateConverter";
 import UserProfileConverter from "../../models/dataConverters/UserProfileConverter";
-import { calculateResults } from "../../models/operations/calculateScore";
 import { gamesDetailUrl } from "../../urls";
 import css from "./GamesList.module.css";
 
@@ -91,32 +74,8 @@ const GameListItem: React.FC<GameListItemProps> = ({ gameId }) => {
     ).withConverter(UserProfileConverter),
   );
 
-  const gameStatesCollection = useFirestoreCollection(
-    query(
-      collection(firestore, gameStatesCollectionPath({ gameId })).withConverter(
-        GameStateConverter,
-      ),
-    ),
-  );
-
-  const gameResults =
-    gameDocData &&
-    gameStatesCollection.data &&
-    calculateResults({
-      game: gameDocData,
-      gameStates: gameStatesCollection.data.docs.map((doc) => doc.data()),
-    });
-
-  const ownGameResult =
-    authUserId && gameResults
-      ? gameResults.resultsByUserId[authUserId]
-      : undefined;
-
   const userCreatedGame =
     authUserId && gameDoc.data?.data()?.creatorId === authUserId;
-  const exposeWords = userCreatedGame || ownGameResult?.complete;
-
-  const userCanPlayGame = !userCreatedGame;
 
   return (
     <IonItem routerLink={gameDetailLink} lines="full" detail={false}>
@@ -144,33 +103,9 @@ const GameListItem: React.FC<GameListItemProps> = ({ gameId }) => {
               )
             )}
           </IonCol>
-          {userCanPlayGame && (
-            <>
-              <IonCol size="auto">
-                <IonIcon icon={peopleCircleOutline} />{" "}
-                {gameStatesCollection.data?.size}
-              </IonCol>
-              <IonCol size="auto">
-                <IonIcon icon={statsChartOutline} />{" "}
-                {(ownGameResult && ownGameResult.score) || "-"}
-              </IonCol>
-              <IonCol size="auto">
-                <IonIcon icon={trophyOutline} />
-                {ownGameResult && ownGameResult.complete
-                  ? ownGameResult.position
-                  : "-"}
-              </IonCol>
-            </>
-          )}
         </IonRow>
         <IonRow>
-          <IonCol>
-            {gameDoc.data?.data()?.targetWords.map((word) => (
-              <IonChip key={word} className={css.chip}>
-                {exposeWords ? word : "---"}
-              </IonChip>
-            ))}
-          </IonCol>
+          <IonCol></IonCol>
         </IonRow>
       </IonGrid>
     </IonItem>
@@ -192,15 +127,6 @@ const GamesList: React.FC<GamesListProps> = ({ userId }) => {
       ]),
     ),
   );
-  const myGameStatesCollection = useFirestoreCollection(
-    query(
-      collectionGroup(firestore, gameStatesCollectionGroupPath()).withConverter(
-        GameStateConverter,
-      ),
-      where("creatorId", "==", userId),
-      orderBy("createdAt", "desc"),
-    ),
-  );
 
   const allRelevantGames = uniqBy(
     [
@@ -210,13 +136,6 @@ const GamesList: React.FC<GamesListProps> = ({ userId }) => {
           createdAt: doc.data().createdAt.toDate(),
         }),
       ),
-      ...(
-        (myGameStatesCollection.data && myGameStatesCollection.data.docs) ||
-        []
-      ).map((doc) => ({
-        gameId: doc.data().gameId,
-        createdAt: doc.data().createdAt.toDate(),
-      })),
     ],
     ({ gameId }) => gameId,
   ).sort((a, b) => b.createdAt.valueOf() - a.createdAt.valueOf());

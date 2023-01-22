@@ -11,34 +11,17 @@ import {
   IonToolbar,
   useIonToast,
 } from "@ionic/react";
-import {
-  collection,
-  doc,
-  DocumentSnapshot,
-  QueryDocumentSnapshot,
-} from "firebase/firestore";
+import { doc, DocumentSnapshot } from "firebase/firestore";
 import { arrowBackOutline } from "ionicons/icons";
 import { get } from "lodash";
 import React, { useCallback } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { useRouteMatch } from "react-router";
-import {
-  useFirestore,
-  useFirestoreCollection,
-  useFirestoreDoc,
-  useUser,
-} from "reactfire";
+import { useFirestore, useFirestoreDoc, useUser } from "reactfire";
 import GameBoard from "../../components/GameBoard";
-import {
-  gamesDocPath,
-  gameStatesCollectionPath,
-  gameStatesDocPath,
-} from "../../firebase/firestorePathBuilders";
+import { gamesDocPath } from "../../firebase/firestorePathBuilders";
 import GameConverter from "../../models/dataConverters/GameConverter";
-import GameStateConverter from "../../models/dataConverters/GameStateConverter";
 import { Game } from "../../models/Game";
-import { GameState } from "../../models/GameState";
-import createGameState from "../../models/operations/createGameState";
 import { GamesDetailUrlParams, gamesListUrl } from "../../urls";
 import css from "./GamesDetailPage.module.css";
 
@@ -67,14 +50,14 @@ const NoGameStateSelected: React.FC<NoGameStateSelectedProps> = ({ game }) => {
 
   const onPlayGameClick = useCallback(async () => {
     try {
-      await createGameState({ firestore, gameId, userId: authUser!.uid });
+      window.alert("TO DO");
     } catch (error) {
       presentToast({
         message: `Error: ${get(error, "message")}`,
         color: "danger",
       });
     }
-  }, [authUser, firestore, gameId, presentToast]);
+  }, [presentToast]);
 
   return (
     <div className={css.fullscreenContainer}>
@@ -108,23 +91,8 @@ const GamesDetailPage: React.FC = () => {
   const gameDoc = useFirestoreDoc(
     doc(firestore, gamesDocPath({ gameId })).withConverter(GameConverter),
   );
-  const gameStatesCollection = useFirestoreCollection(
-    collection(firestore, gameStatesCollectionPath({ gameId })).withConverter(
-      GameConverter,
-    ),
-  );
-  // TODO: allow selecting one of the other GameStates from the collection
 
-  const ownGameState = useFirestoreDoc(
-    doc(
-      firestore,
-      gameStatesDocPath({ gameId, userId: authUser?.uid || "-" }), // TODO: fix me
-    ).withConverter(GameStateConverter),
-  );
-  const selectedGameState = ownGameState;
-
-  const isLoaded =
-    gameDoc.status === "success" && ownGameState.status === "success";
+  const isLoaded = gameDoc.status === "success";
 
   return (
     <IonPage>
@@ -148,16 +116,8 @@ const GamesDetailPage: React.FC = () => {
             <IonProgressBar type="indeterminate" />
           ) : !gameDoc.data.exists() ? (
             <GameNotFound />
-          ) : ownGameState.data.exists() ? (
-            <GameBoard
-              game={gameDoc.data!.data()}
-              gameStateDoc={
-                selectedGameState.data as QueryDocumentSnapshot<GameState>
-              }
-              readonly={selectedGameState.data.id !== ownGameState.data.id}
-            />
           ) : (
-            <NoGameStateSelected game={gameDoc.data} />
+            <GameBoard game={gameDoc.data!.data()} />
           )}
         </IonContent>
       </ErrorBoundary>
