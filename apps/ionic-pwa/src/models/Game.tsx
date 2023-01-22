@@ -71,7 +71,7 @@ export interface GameEvent {
   action: Action;
   targetPlayerId: string;  // Player whos game state this event applies to (will be the same as creator except for powerups)
   creatorId: string;       // Who created this event
-  currentState: GameState;
+  currentState?: GameState;
 }
 
 export interface GameState {
@@ -101,14 +101,9 @@ function randomLetter(): string {
 
 const alphabet = [..."abcdefghijklmnopqrstuvwxyz"];
 
-export function randomGrid(size: number): Cell[][] {
-  return times(size, () => {
-    return times(size, () => ({
-      letter: randomLetter(),
-      hits: 0,
-      powerup: PowerupType.NONE,
-    }));
-  });
+export function randomGrid(size: number): string[][] {
+  return times(size, () =>
+    times(size, () => randomLetter()));
 }
 
 export function buildCellGrid(letters: string[][]) {
@@ -124,6 +119,10 @@ export function gameEventRollup(
   event: GameEvent
 ): RollupGameState
 {
+  if (!("targetPlayerId" in event)) {
+    throw new Error("Malformed Event");
+  }
+
   if (state.player !== event.targetPlayerId) {
     return state;
   }
