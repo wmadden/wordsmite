@@ -141,11 +141,24 @@ export function gameEventRollup(
     state.grid = buildCellGrid(event.action.grid);
     return state;
   } else if (event.action.type === ActionType.MAKE_WORD) {
+    const word = event.action.word;
     state.words.push(event.action.word);
     for (const [row, col] of event.action.letterPositions) {
       state.grid[row][col].hits += 1;
     }
-    state.score += 1; // FIXME
+
+    if (event.action.word.length <= 4) {
+      state.score += 1;
+    } else if (word.length <= 5) {
+      state.score += 2;
+    } else if (word.length <= 6) {
+      state.score =+ 3;
+    } else if (word.length <= 7) {
+      state.score =+ 5;
+    } else if (word.length <= 8) {
+      state.score =+ 11;
+    }
+
     return state;
   } else if (event.action.type === ActionType.DETONATE) {
     for (const {pos: [row, col], letter} of event.action.replacements) {
