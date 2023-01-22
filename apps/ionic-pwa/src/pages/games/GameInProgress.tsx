@@ -1,4 +1,4 @@
-import { IonButton, useIonToast } from "@ionic/react";
+import { IonButton, IonIcon, useIonToast } from "@ionic/react";
 import classNames from "classnames";
 import {
   addDoc,
@@ -6,6 +6,7 @@ import {
   QueryDocumentSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
+import { flash } from "ionicons/icons";
 import React, { useCallback, useMemo } from "react";
 import { useFirestore } from "reactfire";
 import { gameEventsCollectionPath } from "../../firebase/firestorePathBuilders";
@@ -155,7 +156,7 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
         disabled={totalHits === 0}
         onClick={onDetonateClick}
       >
-        DETONATE
+        <IonIcon icon={flash} /> SMITE
       </IonButton>
 
       <ul>
