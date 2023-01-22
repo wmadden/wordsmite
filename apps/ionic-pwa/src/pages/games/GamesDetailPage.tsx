@@ -131,6 +131,7 @@ function calculateGameState({
     grid,
     words: [],
     score: 0,
+    player: "",
   };
 }
 
@@ -194,7 +195,7 @@ const GamesDetailPage: React.FC = () => {
             <GameNotFound />
           ) : (
             <GameInProgress
-              game={gameDoc.data!.data()}
+              game={gameDoc.data}
               authUserId={authUser.uid}
               {...{ targetPlayerId }}
             />
