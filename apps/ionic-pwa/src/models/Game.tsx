@@ -4,7 +4,8 @@ export interface Game {
   name: string;
   createdAt: Timestamp;
   startedAt: Timestamp;
-  boardSize: string;
+  boardSize: number;
+  creatorId: string;
 }
 
 enum PowerupType {
