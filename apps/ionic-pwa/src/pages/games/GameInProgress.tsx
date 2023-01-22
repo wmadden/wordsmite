@@ -70,6 +70,7 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
       word: string;
       highlightedCells: CellCoordinate[];
     }): void => {
+      if (gameState.words.includes(word)) return;
       addDoc(
         collection(
           firestore,
@@ -84,7 +85,7 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
           createdAt: serverTimestamp(),
           targetPlayerId,
           creatorId: authUserId,
-          currentState: gameState,
+          // currentState: gameState,
         },
       );
 
@@ -94,7 +95,14 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
         duration: 1500,
       });
     },
-    [authUserId, firestore, game.id, gameState, presentToast, targetPlayerId],
+    [
+      authUserId,
+      firestore,
+      game.id,
+      gameState.words,
+      presentToast,
+      targetPlayerId,
+    ],
   );
 
   const highlightedCellsState = useHighlightedCellsState({
@@ -103,12 +111,13 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
   });
 
   const onDetonateClick = useCallback(() => {
-    const replacements: Boom[] = highlightedCellsState.highlightedCells.map(
-      (cellCoordinate) => ({
-        pos: cellCoordinate,
-        letter: alphabet[Math.floor(Math.random() * alphabet.length)],
-      }),
+    const boomCells = gameState.grid.flatMap((row, i) =>
+      row.flatMap((cell, j) => (cell.hits > 0 ? [{ row: i, col: j }] : [])),
     );
+    const replacements: Boom[] = boomCells.map((cellCoordinate) => ({
+      pos: cellCoordinate,
+      letter: alphabet[Math.floor(Math.random() * alphabet.length)],
+    }));
 
     addDoc(
       collection(
@@ -123,17 +132,10 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
         createdAt: serverTimestamp(),
         targetPlayerId,
         creatorId: authUserId,
-        currentState: gameState,
+        // currentState: gameState,
       },
     );
-  }, [
-    authUserId,
-    firestore,
-    game.id,
-    gameState,
-    highlightedCellsState.highlightedCells,
-    targetPlayerId,
-  ]);
+  }, [authUserId, firestore, game.id, gameState.grid, targetPlayerId]);
 
   const totalHits = countHits(gameState);
 
@@ -155,6 +157,12 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
       >
         DETONATE
       </IonButton>
+
+      <ul>
+        {gameState.words.reverse().map((word, i) => (
+          <li key={i}>{word}</li>
+        ))}
+      </ul>
     </div>
   );
 };

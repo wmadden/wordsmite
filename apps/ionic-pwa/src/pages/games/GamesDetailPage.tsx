@@ -79,17 +79,17 @@ const GamesDetailPage: React.FC = () => {
       orderBy("createdAt", "desc"),
     ),
   );
-  console.log(gameEventsCollection.data?.docs.map((doc) => doc.data()));
 
   const gameStartEvent = gameEventsCollection.data?.docs.find((eventDoc) => {
     return eventDoc.data().action.type === ActionType.GAME_START;
   });
 
   const initEvent = gameEventsCollection.data?.docs.find((eventDoc) => {
-    return eventDoc.data().action.type === ActionType.INIT;
+    return (
+      eventDoc.data().action.type === ActionType.INIT &&
+      eventDoc.data().targetPlayerId === authUser?.uid
+    );
   });
-
-  console.log({ initEvent });
 
   const isLoaded =
     gameDoc.status === "success" &&

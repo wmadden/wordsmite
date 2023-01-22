@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dictEn from "../../data/dict-en.csv?raw";
 import { CellCoordinate, GameState } from "../../models/Game";
 import useDeepEqualMemo from "../../utilities/hooks/useDeepEqualMemo";
@@ -77,9 +77,9 @@ export default function useHighlightedCellsState({
     setHighlightedCells([]);
   }, []);
 
-  useEffect(() => {
-    setHighlightedCells([]);
-  }, [gridWithStableIdentity]);
+  // useEffect(() => {
+  //   setHighlightedCells([]);
+  // }, [gridWithStableIdentity]);
 
   return useMemo(
     () => ({

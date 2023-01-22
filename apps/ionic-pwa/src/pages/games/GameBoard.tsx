@@ -22,6 +22,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <div className={css.gameBoard}>
+      <h1 className="ion-text-center">{gameState.score}</h1>
       <IonGrid>
         {times(boardSize, (row) => {
           return (
@@ -33,14 +34,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
                     <IonButton
                       color={
                         highlightedCellsState.highlightedCells.find(
-                          (cell) => cell[0] === row && cell[1] === col,
+                          (cell) => cell.row === row && cell.col === col,
                         )
                           ? "warning"
                           : "primary"
                       }
                       onClick={(e) => {
                         e.stopPropagation();
-                        highlightedCellsState.highlightCell([row, col]);
+                        highlightedCellsState.highlightCell({ row, col });
                       }}
                       className={classNames(css.letterButton, {
                         [css.detonator]: cell.hits > 0,
