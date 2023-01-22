@@ -10,12 +10,13 @@ import {
   useIonToast,
 } from "@ionic/react";
 import { arrowBackOutline } from "ionicons/icons";
-import { compact, get, uniq } from "lodash";
+import { get } from "lodash";
 import React from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { useHistory } from "react-router-dom";
 import { useFirestore, useUser } from "reactfire";
 import FormErrors from "../../components/form/FormErrors";
+import FormNumberInput from "../../components/form/FormNumberInput";
 import FormTextInput from "../../components/form/FormTextInput";
 import FiveLetterWords from "../../data/FiveLetterWords";
 import createGame from "../../models/operations/createGame";
@@ -64,25 +65,24 @@ const GamesNewPage: React.FC = () => {
   const firestore = useFirestore();
   const formState = useFormState({
     initial: {
-      word1: "",
-      word2: "",
-      word3: "",
-      word4: "",
+      name: "",
+      boardSize: 4,
     },
     validate: {
       fields: {
-        word1: wordInputValidators,
-        word2: wordInputValidators,
-        word3: wordInputValidators,
-        word4: wordInputValidators,
-      },
-      form: (values) => {
-        const words = [values.word1, values.word2, values.word3, values.word4];
-        if (compact(words).length !== words.length) return [];
-        if (uniq(words).length !== words.length) {
-          return [{ message: `all ${words.length} words must be different` }];
-        }
-        return [];
+        name: validate.string.isPresent({ isRequired: "is required" }),
+        boardSize: validate.all([
+          validate.number.isInteger({
+            mustBeWholeNumber: "must be a whole number",
+          }),
+          validate.number.within(
+            { min: 4, max: 10 },
+            {
+              numberMinimum: (min) => `must be at least ${min}`,
+              numberMaximum: (max) => `must be no more than ${max}`,
+            },
+          ),
+        ]),
       },
     },
   });
@@ -108,13 +108,9 @@ const GamesNewPage: React.FC = () => {
         const gameDoc = await createGame({
           firestore,
           game: {
+            name: values.name,
+            boardSize: values.boardSize,
             creatorId: authUser.data.uid,
-            targetWords: [
-              values.word1,
-              values.word2,
-              values.word3,
-              values.word4,
-            ],
           },
         });
         history.replace(gamesDetailUrl({ gameId: gameDoc.id }));
@@ -147,10 +143,8 @@ const GamesNewPage: React.FC = () => {
 
         <IonContent fullscreen>
           <form {...form}>
-            <FormTextInput {...fields.word1} label="Word 1" />
-            <FormTextInput {...fields.word2} label="Word 2" />
-            <FormTextInput {...fields.word3} label="Word 3" />
-            <FormTextInput {...fields.word4} label="Word 4" />
+            <FormTextInput {...fields.name} label="Name" />
+            <FormNumberInput {...fields.boardSize} label="Board Size" />
 
             <FormErrors {...{ formErrors }} />
 

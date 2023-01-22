@@ -14,7 +14,7 @@ export default function createGame({
   game,
 }: {
   firestore: Firestore;
-  game: Omit<Game, "createdAt">;
+  game: Omit<Game, "createdAt" | "startedAt">;
 }): Promise<DocumentReference<Game>> {
   const gamesCollection = collection(
     firestore,

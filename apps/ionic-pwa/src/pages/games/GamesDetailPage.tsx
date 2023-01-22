@@ -92,7 +92,9 @@ const GamesDetailPage: React.FC = () => {
     doc(firestore, gamesDocPath({ gameId })).withConverter(GameConverter),
   );
 
-  const isLoaded = gameDoc.status === "success";
+  const targetPlayerId = authUser?.uid;
+
+  const isLoaded = gameDoc.status === "success" && targetPlayerId;
 
   return (
     <IonPage>
@@ -117,7 +119,11 @@ const GamesDetailPage: React.FC = () => {
           ) : !gameDoc.data.exists() ? (
             <GameNotFound />
           ) : (
-            <GameBoard game={gameDoc.data!.data()} />
+            <GameBoard
+              game={gameDoc.data!.data()}
+              authUserId={authUser.uid}
+              {...{ targetPlayerId }}
+            />
           )}
         </IonContent>
       </ErrorBoundary>
