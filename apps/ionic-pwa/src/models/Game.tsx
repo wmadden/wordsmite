@@ -178,6 +178,8 @@ export function gameEventRollup(
       cell.letter = letter;
     }
     return state;
+  } else if (event.action.type === ActionType.GAME_START) {
+    return state;
   } else if (event.action.type === ActionType.IGNORE) {
     return state;
   } else {
