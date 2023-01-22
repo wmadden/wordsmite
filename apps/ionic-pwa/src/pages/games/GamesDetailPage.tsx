@@ -9,20 +9,28 @@ import {
   IonSkeletonText,
   IonTitle,
   IonToolbar,
-  useIonToast,
 } from "@ionic/react";
-import { doc, DocumentSnapshot } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import { arrowBackOutline } from "ionicons/icons";
-import { get } from "lodash";
-import React, { useCallback } from "react";
+import React from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { useRouteMatch } from "react-router";
-import { useFirestore, useFirestoreDoc, useUser } from "reactfire";
-import { gamesDocPath } from "../../firebase/firestorePathBuilders";
+import {
+  useFirestore,
+  useFirestoreCollection,
+  useFirestoreDoc,
+  useUser,
+} from "reactfire";
+import {
+  gameEventsCollectionPath,
+  gamesDocPath,
+} from "../../firebase/firestorePathBuilders";
 import GameConverter from "../../models/dataConverters/GameConverter";
-import { Game } from "../../models/Game";
+import GameEventConverter from "../../models/dataConverters/GameEventConverter";
+import { ActionType } from "../../models/Game";
 import { GamesDetailUrlParams, gamesListUrl } from "../../urls";
 import GameInProgress from "./GameInProgress";
+import GameNotStarted from "./GameNotStarted";
 import css from "./GamesDetailPage.module.css";
 
 export type GameNotFoundProps = {};
@@ -33,37 +41,6 @@ const GameNotFound: React.FC<GameNotFoundProps> = (props) => {
       <div className={css.centeredContent}>
         Can't find that game. Broken link?
       </div>
-    </div>
-  );
-};
-
-export type NoGameStateSelectedProps = {
-  game: DocumentSnapshot<Game>;
-};
-
-const NoGameStateSelected: React.FC<NoGameStateSelectedProps> = ({ game }) => {
-  const firestore = useFirestore();
-  const routeMatch = useRouteMatch<GamesDetailUrlParams>();
-  const gameId = routeMatch.params.gameId;
-  const { data: authUser } = useUser();
-  const [presentToast] = useIonToast();
-
-  const onPlayGameClick = useCallback(async () => {
-    try {
-      window.alert("TO DO");
-    } catch (error) {
-      presentToast({
-        message: `Error: ${get(error, "message")}`,
-        color: "danger",
-      });
-    }
-  }, [presentToast]);
-
-  return (
-    <div className={css.fullscreenContainer}>
-      <IonButton onClick={onPlayGameClick} className={css.centeredContent}>
-        Play Game
-      </IonButton>
     </div>
   );
 };
@@ -96,6 +73,20 @@ const GamesDetailPage: React.FC = () => {
 
   const isLoaded = gameDoc.status === "success" && targetPlayerId;
 
+  const gameEventsCollection = useFirestoreCollection(
+    collection(firestore, gameEventsCollectionPath({ gameId })).withConverter(
+      GameEventConverter,
+    ),
+  );
+
+  const gameStartEvent = gameEventsCollection.data?.docs.find((eventDoc) => {
+    return eventDoc.data().action.type === ActionType.GAME_START;
+  });
+
+  const initEvent = gameEventsCollection.data?.docs.find((eventDoc) => {
+    return eventDoc.data().action.type === ActionType.GAME_START;
+  });
+
   return (
     <IonPage>
       <ErrorBoundary FallbackComponent={ErrorContent}>
@@ -118,6 +109,13 @@ const GamesDetailPage: React.FC = () => {
             <IonProgressBar type="indeterminate" />
           ) : !gameDoc.data.exists() ? (
             <GameNotFound />
+          ) : !gameStartEvent || !initEvent ? (
+            <GameNotStarted
+              game={gameDoc.data}
+              started={!!gameStartEvent}
+              joined={!!initEvent}
+              targetPlayerId={authUser?.uid || ""}
+            />
           ) : (
             <GameInProgress
               game={gameDoc.data}
