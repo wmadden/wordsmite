@@ -8,7 +8,7 @@ export interface Game {
   creatorId: string;
 }
 
-enum PowerupType {
+export enum PowerupType {
   NONE = 0,
 }
 
