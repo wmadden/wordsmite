@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -e
+. $(dirname "$0")/.include.sh
+
+PLATFORM=$1
+echo $PLATFORM
+
+if [[ $PLATFORM != "ios" && $PLATFORM != "android" ]]; then
+  echo "Usage: native-build ios|android"
+  exit 1
+fi
+
+# if [[ $ENVIRONMENT_NAME == "production" ]]; then
+#   echo -e "\x1B[1;31m⚠️ You are in the production environment, should you switch env first?\x1B[0m"
+#   exit 1
+# fi
+
+echo "🥥 Updating Capacitor dependencies, building web assets and copying them to ${PLATFORM}/"
+echo
+./bin/build
+yarn exec cap sync $PLATFORM
+
+echo "🛠 Opening IDE"
+yarn exec cap open $PLATFORM
+
+if [[ $PLATFORM == "ios" ]]; then
+  echo
+  echo -e "\x1B[1;32mNext steps:\x1B[0m"
+  echo "  1. In XCode click the menu Product > Scheme > App"
+  echo "  2. In XCode click the menu Product > Destination and select your run target (e.g. simulator)"
+  echo "  3. Press CMD+R"
+  echo
+  echo -e "\x1B[1;32m✔ Done!\x1B[0m"
+else
+  echo
+  echo -e "\x1B[1;32mNext steps:\x1B[0m"
+  echo "  1. In Android Studio Click 'Run App' (shift + F10)"
+fi

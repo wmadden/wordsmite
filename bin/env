@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+set -e
+SUPPRESS_ENV_CHECK=1
+. $(dirname "$0")/.include.sh
+
+default_outfile=".env"
+
+required_env_config_vars="
+  FIREBASE_API_KEY
+  FIREBASE_AUTH_DOMAIN
+  FIREBASE_PROJECT_ID
+  FIREBASE_STORAGE_BUCKET
+  FIREBASE_MESSAGING_SENDER_ID
+  FIREBASE_APP_ID
+  FIREBASE_CLOUD_FUNCTIONS_REGION
+"
+
+whitelisted_react_env_vars="
+  ENVIRONMENT_NAME
+
+  FIREBASE_API_KEY
+  FIREBASE_AUTH_DOMAIN
+  FIREBASE_PROJECT_ID
+  FIREBASE_STORAGE_BUCKET
+  FIREBASE_MESSAGING_SENDER_ID
+  FIREBASE_APP_ID
+  FIREBASE_CLOUD_FUNCTIONS_REGION
+
+  FIREBASE_EMULATOR_HOST
+  FIRESTORE_EMULATOR_PORT
+  FUNCTIONS_EMULATOR_PORT
+  AUTH_EMULATOR_PORT
+  HOSTING_EMULATOR_PORT
+  FIREBASE_EMULATOR_HUB_PORT
+
+  RELEASE_VERSION
+"
+whitelisted_cypress_env_vars="
+  ENVIRONMENT_NAME
+
+  FIREBASE_API_KEY
+  FIREBASE_AUTH_DOMAIN
+  FIREBASE_PROJECT_ID
+  FIREBASE_STORAGE_BUCKET
+  FIREBASE_MESSAGING_SENDER_ID
+  FIREBASE_APP_ID
+"
+
+function print_usage {
+  echo "Usage:"
+  echo "  bin/env"
+  echo "    Print current environment name"
+  echo "  bin/env <ENV_NAME>"
+  echo "    Switch to new environment <ENV_NAME>"
+  echo "  bin/env --list"
+  echo "    List available environments"
+  echo "  bin/env <ENV_NAME> --out <FILE>"
+  echo "    Switch to new environment <ENV_NAME> and write config to <FILE>"
+  # TODO: detailed documentation of where this reads data from and how it writes it
+}
+
+function print_available_environments {
+  echo "Available environments:"
+  for file in environments/*.config; do
+    echo -e "  \x1B[1;32m$(basename ${file} ".config")\x1B[0m"
+  done
+}
+
+function write_environment_config {
+  local destination_file=$1
+
+  ENVIRONMENT_NAME=${new_environment_name}
+  RELEASE_VERSION=$(git rev-parse HEAD)
+  write_variables ${destination_file} "ENVIRONMENT_NAME RELEASE_VERSION"
+
+  local old_IFS=${IFS}
+  IFS=$'\n'
+
+  for config_file in ${new_environment_config_file}*; do
+    for line in $(grep -o '^[^#]*' "${config_file}"); do
+      # TODO: use a stricter regex than .* for security
+      if [[ ${line} =~ [a-zA-Z_]=.* ]]; then
+        export ${line}
+        echo ${line} >> ${destination_file}
+      fi
+    done
+    echo >> ${destination_file}
+  done
+
+  IFS=${old_IFS}
+}
+
+function check_required_env_vars {
+  local new_environment_name=$1
+
+  for var in ${required_env_config_vars}; do
+    if [ -z "${!var}" ]; then
+      echo "🛑 Environment variable '${var}' is missing from config"
+      echo "Make sure it's set in environments/${new_environment_name}.config"
+      exit 1
+    fi
+  done
+}
+
+function print_current_environment {
+  if [[ -z ${ENVIRONMENT_NAME} ]]; then
+    echo -e "\x1B[1;31mNo environment selected\x1B[0m"
+    print_available_environments
+  else
+    echo -e "Using environment config for \x1B[1;32m${ENVIRONMENT_NAME}\x1B[0m"
+  fi
+}
+
+function clear_destination_file {
+  local destination_file=$1
+  if [[ -f ${destination_file} ]]; then
+    rm ${destination_file}
+  fi
+}
+
+function write_variables {
+  local destination_file=$1
+  local variable_names=$2
+
+  for variable_name in $variable_names; do
+    echo "${variable_name}=${!variable_name}" >> ${destination_file}
+  done
+  echo >> ${destination_file}
+}
+
+function proxy_variables {
+  local destination_file=$1
+  local prefix=$2
+  local variable_names=$3
+
+  for variable_name in $variable_names; do
+    if [ ! -z ${variable_name} ]; then
+      export "${prefix}${variable_name}=${!variable_name}"
+      echo "${prefix}${variable_name}=${!variable_name}" >> ${destination_file}
+    fi
+  done
+}
+
+function write_firebase_emulator_config_from_firebase_json {
+  local destination_file=$1
+  local firebase_config_file="firebase.json"
+
+  FIREBASE_EMULATOR_HOST="localhost"
+  FIRESTORE_EMULATOR_PORT=$(jq '.emulators.firestore.port' ${firebase_config_file})
+  FUNCTIONS_EMULATOR_PORT=$(jq '.emulators.functions.port' ${firebase_config_file})
+  AUTH_EMULATOR_PORT=$(jq '.emulators.auth.port' ${firebase_config_file})
+  HOSTING_EMULATOR_PORT=$(jq '.emulators.hosting.port' ${firebase_config_file})
+  STORAGE_EMULATOR_PORT=$(jq '.emulators.storage.port' ${firebase_config_file})
+  FIREBASE_EMULATOR_HUB_PORT=$(jq '.emulators.hub.port' ${firebase_config_file})
+
+  write_variables ${destination_file} "
+    FIREBASE_EMULATOR_HOST
+    FIRESTORE_EMULATOR_PORT
+    FUNCTIONS_EMULATOR_PORT
+    AUTH_EMULATOR_PORT
+    HOSTING_EMULATOR_PORT
+    STORAGE_EMULATOR_PORT
+    FIREBASE_EMULATOR_HUB_PORT
+  "
+}
+
+function whitelist_env_vars {
+  local destination_file=$1
+
+  proxy_variables ${destination_file} "VITE_" "${whitelisted_react_env_vars}"
+  proxy_variables ${destination_file} "CYPRESS_" "${whitelisted_cypress_env_vars}"
+}
+
+function set_firebase_cli_active_project {
+  local new_project_id=${FIREBASE_PROJECT_ID}
+  local firebase_config_file=~/.config/configstore/firebase-tools.json
+
+  # If config file doesn't exist, no need to update it
+  if [[ -f "${firebase_config_file}" ]]; then
+    local temp_file=$(mktemp)
+    jq ".activeProjects[\"$(pwd)\"] |= \"${FIREBASE_PROJECT_ID}\"" "${firebase_config_file}" > "${temp_file}"
+    mv "${temp_file}" "${firebase_config_file}"
+
+    echo -e "\x1B[1;32m✔\x1B[0m Active Firebase project set to \x1B[1;32m${FIREBASE_PROJECT_ID}\x1B[0m"
+  fi
+}
+
+function get_firebase_functions_config {
+  echo -e " - Downloading Firebase functions config vars...";
+  yarn exec firebase functions:config:get > ./functions/.runtimeconfig.json
+  echo -e "\x1B[1;32m✔\x1B[0m Function runtime config for \x1B[1;32m${FIREBASE_PROJECT_ID}\x1B[0m written to \x1B[1mfunctions/.runtimeconfig.json\x1B[0m"
+}
+
+function switch_to_environment {
+  local new_environment_name=$1
+  local destination_file=$2
+
+  local new_environment_config_file="environments/${new_environment_name}"
+
+  if [[ ! -f ${new_environment_config_file}.config ]]; then
+    echo -e "Unrecognized environment \x1B[1;31m${new_environment_name}\x1B[0m"
+    echo
+    print_available_environments
+    exit 1
+  fi
+
+  clear_destination_file ${destination_file}
+
+  write_environment_config ${destination_file}
+  # write_firebase_emulator_config_from_firebase_json ${destination_file}
+  whitelist_env_vars ${destination_file}
+
+  check_required_env_vars ${new_environment_name}
+
+  # if [[ ! ${CI} ]]; then
+  #   set_firebase_cli_active_project
+  #   get_firebase_functions_config
+  # fi
+
+  echo -e "\x1B[1;32m✔\x1B[0m Environment config for \x1B[1;32m${new_environment_name}\x1B[0m written to \x1B[1m${destination_file}\x1B[0m"
+}
+
+function main {
+  if [[ $# == 0 ]]; then
+    print_current_environment
+    exit 0
+  fi
+
+  if [[ $1 == "--help" ]]; then
+    print_usage
+    exit 0
+  fi
+
+  if [[ $1 == "--list" ]]; then
+    print_available_environments
+    exit 0
+  fi
+
+  if [[ $# == 1 ]]; then
+    switch_to_environment $1 $default_outfile
+    exit 0
+  fi
+
+  if [[ $# == 3 ]]; then
+    if [[ $1 == "--out" ]]; then
+      local destination_file=$2
+      local new_environment_name=$3
+    elif [[ $2 == "--out" ]]; then
+      local new_environment_name=$1
+      local destination_file=$3
+    else
+      print_usage
+      exit 1
+    fi
+
+    switch_to_environment $new_environment_name ${destination_file}
+    exit 0
+  fi
+
+  print_usage
+  exit 1
+}
+
+main "$@"

@@ -1,0 +1,4 @@
+{
+  "ignorePatterns": ["dist/**"],
+  "extends": ["react-app", "react-app/jest"]
+}

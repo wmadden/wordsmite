@@ -1,0 +1,90 @@
+{
+  "name": "@wordsmite/ionic-pwa",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@3.3.0",
+  "engines": {
+    "node": "10.2.0",
+    "yarn": "^3.2.1"
+  },
+  "dependencies": {
+    "@capacitor/app": "4.1.1",
+    "@capacitor/core": "^4.6.0",
+    "@capacitor/haptics": "4.1.0",
+    "@capacitor/ios": "^4.6.0",
+    "@capacitor/keyboard": "4.1.0",
+    "@capacitor/status-bar": "4.1.1",
+    "@ionic/core": "^6.5.0",
+    "@ionic/pwa-elements": "^3.1.1",
+    "@ionic/react": "^6.0.0",
+    "@ionic/react-router": "^6.0.0",
+    "classnames": "^2.3.2",
+    "eslint": "^8.31.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eventemitter3": "^5.0.0",
+    "firebase": "^9.14.0",
+    "history": "^4.9.0",
+    "ionicons": "^6.0.3",
+    "lodash": "^4.17.21",
+    "prettier": "^2.8.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-error-boundary": "^3.1.4",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "react-simple-keyboard": "^3.5.17",
+    "reactfire": "^4.2.2",
+    "safari-14-idb-fix": "^3.0.0",
+    "simple-keyboard": "^3.5.14",
+    "web-vitals": "^0.2.4",
+    "workbox-background-sync": "^5.1.4",
+    "workbox-broadcast-update": "^5.1.4",
+    "workbox-cacheable-response": "^5.1.4",
+    "workbox-core": "^5.1.4",
+    "workbox-expiration": "^5.1.4",
+    "workbox-google-analytics": "^5.1.4",
+    "workbox-navigation-preload": "^5.1.4",
+    "workbox-precaching": "^5.1.4",
+    "workbox-range-requests": "^5.1.4",
+    "workbox-routing": "^5.1.4",
+    "workbox-strategies": "^5.1.4",
+    "workbox-streams": "^5.1.4"
+  },
+  "scripts": {
+    "build": "./bin/build",
+    "test": "./bin/test"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^4.6.0",
+    "@testing-library/jest-dom": "^5.11.9",
+    "@testing-library/react": "^13.3.0",
+    "@testing-library/user-event": "^12.6.3",
+    "@types/eslint": "^8",
+    "@types/jest": "^26.0.20",
+    "@types/lodash": "^4",
+    "@types/node": "^12.19.15",
+    "@types/prettier": "^2",
+    "@types/react": "^18.0.24",
+    "@types/react-dom": "^18.0.8",
+    "@types/react-router": "^5.1.19",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^2.2.0",
+    "firebase-tools": "^11.16.1",
+    "prettier-plugin-organize-imports": "^3.2.1",
+    "typescript": "4.9.3",
+    "vite": "^3.2.3"
+  }
+}

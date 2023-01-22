@@ -1,0 +1,48 @@
+.timestamp {
+  font-size: 85%;
+}
+
+.gameListItem__grid {
+  padding-left: 0;
+}
+.gameListItem__grid ion-col {
+  align-self: center;
+}
+.gameListItem__grid ion-col:first-child {
+  padding-left: 0;
+}
+
+.headerRow {
+  display: table-header-group;
+  padding: var(--ion-padding);
+  padding-bottom: 0;
+  background: var(--ion-item-background);
+  text-transform: uppercase;
+  font-size: 80%;
+}
+
+.headerRow > * {
+  display: table-cell;
+}
+
+.userChip {
+  display: inline-block;
+  background-color: var(--ion-color-medium);
+  color: var(--ion-color-medium-contrast);
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-size: 90%;
+  font-weight: bold;
+}
+
+.userChipPlayer {
+  background-color: var(--ion-color-primary);
+}
+
+.chip {
+  padding: 4px 10px;
+  height: auto;
+  font-size: 80%;
+  margin: 0;
+  margin-right: 4px;
+}

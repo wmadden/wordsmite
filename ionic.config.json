@@ -1,0 +1,10 @@
+{
+  "name": "wordsmite",
+  "docs": "https://ionicframework.com/docs/cli/configuration",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react",
+  "npmClient": "yarn",
+  "root": "."
+}

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -e
+PACKAGE_ROOT="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )/.." &> /dev/null && pwd 2> /dev/null; )"
+PROJECT_ROOT="$( cd -- "${PACKAGE_ROOT}/../.." &> /dev/null && pwd 2> /dev/null; )"
+PRESERVE_CURRENT_DIRECTORY=1 . ${PROJECT_ROOT}/bin/.include.sh
+cd $PACKAGE_ROOT
+
+if [ ! -z $VITE_USE_EMULATORS]; then
+  echo "🛑 You have 'VITE_USE_EMULATORS' enabled, disable it to continue production build"
+  exit 1
+fi
+
+echo -e "🔨 Build \x1B[1;32m${ENVIRONMENT_NAME}\x1B[0m web application"
+yarn exec vite build "$@"
+echo -e "\x1B[1;32m✔ Done!\x1B[0m"

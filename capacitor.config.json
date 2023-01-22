@@ -1,0 +1,24 @@
+{
+  "appId": "bspm.wordsmite",
+  "appName": "wordsmite",
+  "webDir": "apps/ionic-pwa/dist",
+  "bundledWebRuntime": false,
+  "cordova": {
+    "preferences": {
+      "DisableDeploy": "true"
+    }
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": [
+        "alert",
+        "badge",
+        "sound"
+      ]
+    },
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "androidScaleType": "CENTER_CROP"
+    }
+  }
+}

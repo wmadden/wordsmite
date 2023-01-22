@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -e
+PROJECT_ROOT="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )/.." &> /dev/null && pwd 2> /dev/null; )";
+. ${PROJECT_ROOT}/bin/.include.sh
+cd $PROJECT_ROOT
+
+apps/ionic-pwa/bin/build

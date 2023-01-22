@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -e
+. $(dirname "$0")/.include.sh
+
+PLATFORM=$1
+echo $PLATFORM
+
+CAPACITOR_CONFIG_FILE=capacitor.config.json
+OUTPUT_DIR=apps/ionic-pwa/build
+
+if [[ $PLATFORM != "ios" && $PLATFORM != "android" ]]; then
+  echo "Usage: native-build ios|android"
+  exit 1
+fi
+
+# If web assets are missing `cap run` will fail, even though it won't use the assets
+if [ ! -d ${OUTPUT_DIR} ] || [ ! -f ${OUTPUT_DIR}/index.html ]; then
+  ./bin/build
+fi
+
+ip_address=$(ifconfig | grep 'inet ' | grep -Fv 127.0.0.1 | awk '{print $2}')
+
+temp_file=$(mktemp)
+jq ".server.url = \"http://${ip_address}:5173\"" ${CAPACITOR_CONFIG_FILE} > $temp_file
+mv "${temp_file}" "${CAPACITOR_CONFIG_FILE}"
+
+yarn exec cap copy $PLATFORM
+yarn exec cap update $PLATFORM
+
+yarn exec cap open $1
+
+echo "🏄🏿‍♂️ Start live reloading Ionic server"
+./bin/local-dev-server

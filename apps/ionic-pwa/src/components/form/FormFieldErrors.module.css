@@ -1,0 +1,8 @@
+.container {
+  padding-left: calc(16px + var(--ion-safe-area-left, 0px));
+  background: var(--ion-item-background, var(--ion-background-color, #fff));
+}
+
+:global(.ios) .container {
+  padding-left: calc(20px + var(--ion-safe-area-left, 0px));
+}
