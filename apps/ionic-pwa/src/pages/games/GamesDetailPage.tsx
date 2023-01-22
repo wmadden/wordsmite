@@ -11,18 +11,39 @@ import {
   IonToolbar,
   useIonToast,
 } from "@ionic/react";
-import { doc, DocumentSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
+} from "firebase/firestore";
 import { arrowBackOutline } from "ionicons/icons";
 import { get } from "lodash";
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { useRouteMatch } from "react-router";
-import { useFirestore, useFirestoreDoc, useUser } from "reactfire";
+import {
+  useFirestore,
+  useFirestoreCollection,
+  useFirestoreDoc,
+  useUser,
+} from "reactfire";
 import GameBoard from "../../components/GameBoard";
-import { gamesDocPath } from "../../firebase/firestorePathBuilders";
+import {
+  gameEventsCollectionPath,
+  gamesDocPath,
+} from "../../firebase/firestorePathBuilders";
 import GameConverter from "../../models/dataConverters/GameConverter";
-import { Game } from "../../models/Game";
+import GameEventConverter from "../../models/dataConverters/GameEventConverter";
+import {
+  Cell,
+  Game,
+  GameEvent,
+  GameState,
+  PowerupType,
+} from "../../models/Game";
 import { GamesDetailUrlParams, gamesListUrl } from "../../urls";
+import times from "../../utilities/times";
 import css from "./GamesDetailPage.module.css";
 
 export type GameNotFoundProps = {};
@@ -82,6 +103,59 @@ const ErrorContent: React.FC<ErrorContentProps> = ({ error }) => {
   );
 };
 
+export type GameInProgressProps = {
+  game: QueryDocumentSnapshot<Game>;
+  authUserId: string;
+  targetPlayerId: string;
+};
+
+const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+
+function calculateGameState({
+  game,
+  gameEvents,
+}: {
+  game: QueryDocumentSnapshot<Game>;
+  gameEvents: QueryDocumentSnapshot<GameEvent>[];
+}): GameState {
+  // TODO: calculate me
+  const gameData = game.data();
+  const grid: Cell[][] = times(gameData.boardSize, () => {
+    return times(gameData.boardSize, () => ({
+      letter: alphabet[Math.floor(Math.random() * alphabet.length)],
+      hits: 0,
+      powerup: PowerupType.NONE,
+    }));
+  });
+  return {
+    grid,
+    words: [],
+    score: 0,
+  };
+}
+
+const GameInProgress: React.FC<GameInProgressProps> = ({ game }) => {
+  const firestore = useFirestore();
+  const gameEventsCollection = useFirestoreCollection(
+    collection(
+      firestore,
+      gameEventsCollectionPath({ gameId: game.id }),
+    ).withConverter(GameEventConverter),
+  );
+
+  const gameState = useMemo(() => {
+    return (
+      game &&
+      calculateGameState({
+        game,
+        gameEvents: gameEventsCollection.data?.docs || [],
+      })
+    );
+  }, [game, gameEventsCollection.data]);
+
+  return <GameBoard game={game.data()} gameState={gameState} />;
+};
+
 const GamesDetailPage: React.FC = () => {
   const firestore = useFirestore();
   const routeMatch = useRouteMatch<GamesDetailUrlParams>();
@@ -119,7 +193,7 @@ const GamesDetailPage: React.FC = () => {
           ) : !gameDoc.data.exists() ? (
             <GameNotFound />
           ) : (
-            <GameBoard
+            <GameInProgress
               game={gameDoc.data!.data()}
               authUserId={authUser.uid}
               {...{ targetPlayerId }}
