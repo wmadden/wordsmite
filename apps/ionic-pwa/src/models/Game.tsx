@@ -44,4 +44,32 @@ export interface GameState {
   grid: Cell[][];
   words: string[];
   score: number;
-};
+  player: string;
+}
+
+function initGameState(player: string): GameState {
+  return {
+    grid: [],
+    words: [],
+    score: 0,
+    player,
+  };
+}
+
+export function gameEventRollup(state: GameState, event: GameEvent): GameState {
+  if (state.player !== event.targetPlayerId) {
+    // TODO print warning
+  }
+
+  if (state.grid.length == 0) {
+    if (event.action !== ActionType.INIT) {
+      throw new Error("Action ");
+    }
+  }
+
+  return state;
+}
+
+export function gameEventRollupAll(player: string, events: GameEvent[]): GameState {
+  return events.reduceRight(gameEventRollup, initGameState(player));
+}
