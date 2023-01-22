@@ -33,10 +33,27 @@ function isActionCheck(value: unknown): value is Action {
   return (isDocumentData(value) && isActionTypeValue(value.type));
 }
 
+
+
 function gameEventToFirestoreData(
   gameEvent: PartialWithFieldValue<GameEvent>,
 ): Record<string, unknown> {
-  return gameEvent;
+  if (gameEvent.action &&
+      "type" in gameEvent.action &&
+      gameEvent.action.type === ActionType.INIT &&
+      "grid" in gameEvent.action &&
+      gameEvent.action.grid != null) {
+    const grid: string[][] = gameEvent.action.grid as any;
+    return {
+      ...gameEvent,
+      action: {
+        type: gameEvent.action.type,
+        grid: grid.map(row => Object.assign({}, row)),
+      }
+    };
+  } else {
+    return gameEvent;
+  }
 }
 
 function firestoreDataToGame(data: StrictDocumentData): GameEvent {

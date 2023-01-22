@@ -20,6 +20,7 @@ export enum ActionType {
   GAME_START = "game_start",
   IGNORE     = "ignore" // Ignore this event
 }
+
 export const gameEventActionValues: readonly ActionType[] = Object.freeze([
   ActionType.DETONATE,
   ActionType.GAME_START,
@@ -28,6 +29,11 @@ export const gameEventActionValues: readonly ActionType[] = Object.freeze([
   ActionType.IGNORE
 ])
 
+export interface CellCoordinate {
+  row: number,
+  col: number,
+}
+
 export interface Cell {
   letter: string;        // Letter contained in this cell
   hits: number;          // Number of times this cell has been used to make a word
@@ -35,7 +41,7 @@ export interface Cell {
 }
 
 export interface Boom {
-  pos: [number, number],
+  pos: CellCoordinate,
   letter: string,
 }
 
@@ -46,7 +52,7 @@ export interface BaseAction {
 export interface MakeWord extends BaseAction {
   type: ActionType.MAKE_WORD,
   word: string,
-  letterPositions: [number, number][];
+  letterPositions: CellCoordinate[];
 }
 
 export interface Detonate extends BaseAction {
@@ -56,7 +62,7 @@ export interface Detonate extends BaseAction {
 
 export interface Init extends BaseAction {
   type: ActionType.INIT,
-  grid: string[][]
+  grid: string[][];
 }
 
 export interface Ignore extends BaseAction {
@@ -143,7 +149,7 @@ export function gameEventRollup(
   } else if (event.action.type === ActionType.MAKE_WORD) {
     const word = event.action.word;
     state.words.push(event.action.word);
-    for (const [row, col] of event.action.letterPositions) {
+    for (const {row, col} of event.action.letterPositions) {
       state.grid[row][col].hits += 1;
     }
 
@@ -161,7 +167,7 @@ export function gameEventRollup(
 
     return state;
   } else if (event.action.type === ActionType.DETONATE) {
-    for (const {pos: [row, col], letter} of event.action.replacements) {
+    for (const {pos: {row, col}, letter} of event.action.replacements) {
       let cell = state.grid[row][col];
       if (cell.hits == 0) {
         throw new Error("Tried to replace unused letter");
