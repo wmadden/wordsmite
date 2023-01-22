@@ -8,9 +8,7 @@ import {
   getString,
   StrictDocumentData,
 } from "../../utilities/firebase/firestore/dataHelpers";
-import getTimestamp, {
-  getOptionalTimestamp,
-} from "../../utilities/firebase/firestore/getTimestamp";
+import getTimestamp from "../../utilities/firebase/firestore/getTimestamp";
 import { Game } from "../Game";
 
 function gameToFirestoreData(
@@ -25,7 +23,6 @@ function firestoreDataToGame(data: StrictDocumentData): Game {
     boardSize: getNumber(data.boardSize),
     creatorId: getString(data.creatorId),
     createdAt: getTimestamp(data.createdAt),
-    startedAt: getOptionalTimestamp(data.createdAt),
   };
 }
 
