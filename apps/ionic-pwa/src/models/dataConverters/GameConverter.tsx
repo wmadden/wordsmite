@@ -4,12 +4,13 @@ import {
 } from "firebase/firestore";
 
 import {
-  getList,
+  getNumber,
   getString,
-  isString,
   StrictDocumentData,
 } from "../../utilities/firebase/firestore/dataHelpers";
-import getTimestamp from "../../utilities/firebase/firestore/getTimestamp";
+import getTimestamp, {
+  getOptionalTimestamp,
+} from "../../utilities/firebase/firestore/getTimestamp";
 import { Game } from "../Game";
 
 function gameToFirestoreData(
@@ -20,9 +21,11 @@ function gameToFirestoreData(
 
 function firestoreDataToGame(data: StrictDocumentData): Game {
   return {
-    targetWords: getList(data.targetWords, { element: isString }),
+    name: getString(data.name),
+    boardSize: getNumber(data.boardSize),
     creatorId: getString(data.creatorId),
     createdAt: getTimestamp(data.createdAt),
+    startedAt: getOptionalTimestamp(data.createdAt),
   };
 }
 
