@@ -57,7 +57,7 @@ function gameEventToFirestoreData(
 }
 
 function firestoreDataToGame(data: StrictDocumentData): GameEvent {
-  return {
+  const ob: GameEvent = {
     creatorId: getString(data.creatorId),
     createdAt: getTimestamp(data.createdAt),
     action: getValue(data.action, {
@@ -74,6 +74,13 @@ function firestoreDataToGame(data: StrictDocumentData): GameEvent {
       },
     }),
   };
+
+  if (ob.action.type === ActionType.INIT) {
+    ob.action.grid = ob.action.grid.map(row =>
+      Array.from({...row, length: Object.keys(row).length}))
+  }
+
+  return ob;
 }
 
 const GameEventConverter: FirestoreDataConverter<GameEvent> = {
