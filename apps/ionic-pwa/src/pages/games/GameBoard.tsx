@@ -31,14 +31,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
                     <IonButton
                       color={
                         highlightedCellsState.highlightedCells.find(
-                          (cell) => cell.row === row && cell.col === col,
+                          (cell) => cell[0] === row && cell[1] === col,
                         )
                           ? "warning"
                           : "primary"
                       }
                       onClick={(e) => {
                         e.stopPropagation();
-                        highlightedCellsState.highlightCell({ row, col });
+                        highlightedCellsState.highlightCell([row, col]);
                       }}
                     >
                       {gameState.grid[row][col].letter}

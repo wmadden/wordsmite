@@ -1,3 +1,4 @@
+import { useIonToast } from "@ionic/react";
 import { collection, QueryDocumentSnapshot } from "firebase/firestore";
 import React, { useMemo } from "react";
 import { useFirestore, useFirestoreCollection } from "reactfire";
@@ -66,7 +67,17 @@ const GameInProgress: React.FC<GameInProgressProps> = ({ game, className }) => {
     );
   }, [game, gameEventsCollection.data]);
 
-  const highlightedCellsState = useHighlightedCellsState();
+  const [presentToast] = useIonToast();
+  const highlightedCellsState = useHighlightedCellsState({
+    gameState,
+    onWordHighlighted: (word) => {
+      presentToast({
+        message: `Found a word: ${word}!`,
+        color: "success",
+        duration: 1500,
+      });
+    },
+  });
 
   return (
     <div

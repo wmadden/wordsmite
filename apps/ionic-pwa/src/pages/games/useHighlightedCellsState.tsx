@@ -1,47 +1,80 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import dictEn from "../../data/dict-en.csv?raw";
+import { GameState } from "../../models/Game";
+import useDeepEqualMemo from "../../utilities/hooks/useDeepEqualMemo";
 
-export type CellCoordinates = {
-  row: number;
-  col: number;
-};
+export type CellCoordinate = [number, number];
 
 export type HighlightedCellsState = {
-  highlightedCells: CellCoordinates[];
-  highlightCell: (cell: CellCoordinates) => void;
+  highlightedCells: CellCoordinate[];
+  highlightCell: (cell: CellCoordinate) => void;
   clearHighlightedCells: () => void;
 };
 
-export default function useHighlightedCellsState(): HighlightedCellsState {
-  const [highlightedCells, setHighlightedCells] = useState<CellCoordinates[]>(
+const dictEnSet = new Set(dictEn.split(/\s/));
+
+export default function useHighlightedCellsState({
+  onWordHighlighted,
+  gameState,
+}: {
+  onWordHighlighted: (word: string) => void;
+  gameState: GameState;
+}): HighlightedCellsState {
+  const [highlightedCells, setHighlightedCells] = useState<CellCoordinate[]>(
     [],
   );
 
-  const highlightCell = useCallback((cellCoordinates: CellCoordinates) => {
-    setHighlightedCells((currentValue) => {
-      const lastHighlightedCell = currentValue[currentValue.length - 1];
-      if (!lastHighlightedCell) return [...currentValue, cellCoordinates];
+  const gridWithStableIdentity = useDeepEqualMemo(
+    () => gameState.grid,
+    [gameState.grid],
+  );
 
-      const alreadyHighlighted = !!currentValue.find(
-        (cell) =>
-          cell.row === cellCoordinates.row && cell.col === cellCoordinates.col,
-      );
-      if (alreadyHighlighted) return [];
+  const highlightCell = useCallback(
+    (cellCoordinates: CellCoordinate) => {
+      setHighlightedCells((currentValue) => {
+        function calculateNewValue(): CellCoordinate[] {
+          const lastHighlightedCell = currentValue[currentValue.length - 1];
+          if (!lastHighlightedCell) return [...currentValue, cellCoordinates];
 
-      const permitted =
-        lastHighlightedCell.col - 1 <= cellCoordinates.col &&
-        lastHighlightedCell.col + 1 >= cellCoordinates.col &&
-        lastHighlightedCell.row - 1 <= cellCoordinates.row &&
-        lastHighlightedCell.row + 1 >= cellCoordinates.row;
+          const alreadyHighlighted = !!currentValue.find(
+            (cell) =>
+              cell[0] === cellCoordinates[0] && cell[1] === cellCoordinates[1],
+          );
+          if (alreadyHighlighted) return [];
 
-      if (!permitted) return currentValue;
+          const permitted =
+            lastHighlightedCell[1] - 1 <= cellCoordinates[1] &&
+            lastHighlightedCell[1] + 1 >= cellCoordinates[1] &&
+            lastHighlightedCell[0] - 1 <= cellCoordinates[0] &&
+            lastHighlightedCell[0] + 1 >= cellCoordinates[0];
 
-      return [...currentValue, cellCoordinates];
-    });
-  }, []);
+          if (!permitted) return currentValue;
+
+          return [...currentValue, cellCoordinates];
+        }
+
+        const newValue = calculateNewValue();
+        const highlightedString = newValue
+          .map(([row, col]) => gridWithStableIdentity[row][col].letter)
+          .join("");
+
+        if (highlightedString && dictEnSet.has(highlightedString)) {
+          onWordHighlighted(highlightedString);
+        }
+
+        return newValue;
+      });
+    },
+    [gridWithStableIdentity, onWordHighlighted],
+  );
 
   const clearHighlightedCells = useCallback(() => {
     setHighlightedCells([]);
   }, []);
+
+  useEffect(() => {
+    setHighlightedCells([]);
+  }, [gridWithStableIdentity]);
 
   return useMemo(
     () => ({
