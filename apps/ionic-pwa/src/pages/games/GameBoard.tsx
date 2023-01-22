@@ -1,4 +1,5 @@
 import { IonButton, IonCol, IonGrid, IonRow } from "@ionic/react";
+import classNames from "classnames";
 import { times } from "lodash";
 import React from "react";
 import { Game, GameState } from "../../models/Game";
@@ -26,6 +27,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           return (
             <IonRow key={row}>
               {times(boardSize, (col) => {
+                const cell = gameState.grid[row][col];
                 return (
                   <IonCol key={col}>
                     <IonButton
@@ -40,6 +42,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
                         e.stopPropagation();
                         highlightedCellsState.highlightCell([row, col]);
                       }}
+                      className={classNames(css.letterButton, {
+                        [css.detonator]: cell.hits > 0,
+                      })}
                     >
                       {gameState.grid[row][col].letter}
                     </IonButton>
