@@ -9,3 +9,11 @@ export function gamesDocPath({ gameId }: { gameId: string }): string {
 export function userProfilesDocPath({ userId }: { userId: string }): string {
   return `/UserProfiles/${userId}`;
 }
+
+export function gameEventsCollectionPath({
+  gameId,
+}: {
+  gameId: string;
+}): string {
+  return `/Games/${gameId}/GameEvents`;
+}
