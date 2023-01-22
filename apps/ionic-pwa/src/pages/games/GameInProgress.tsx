@@ -33,7 +33,7 @@ export type GameInProgressProps = {
   className?: string;
 };
 
-const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+const alphabet = [..."abcdefghijklmnopqrstuvwxyz"];
 
 function calculateGameState({
   game,
