@@ -1,5 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
+import times from "../utilities/times";
+
 export interface Game {
   name: string;
   createdAt: Timestamp;
@@ -38,38 +40,67 @@ export interface GameEvent {
   action: ActionType;
   targetPlayerId: string;  // Player whos game state this event applies to (will be the same as creator except for powerups)
   creatorId: string;       // Who created this event
+  currentState: GameState;
 }
 
 export interface GameState {
   grid: Cell[][];
   words: string[];
   score: number;
+}
+
+export interface RollupGameState extends GameState {
+  game: Game;
   player: string;
 }
 
-function initGameState(player: string): GameState {
+function initGameState(game: Game, player: string): RollupGameState {
   return {
+    game,
+    player,
     grid: [],
     words: [],
     score: 0,
-    player,
   };
 }
 
-export function gameEventRollup(state: GameState, event: GameEvent): GameState {
+const alphabet = [..."abcdefghijklmnopqrstuvwxyz"];
+
+export function randomGrid(size: number): Cell[][] {
+  const grid: Cell[][] = times(size, () => {
+    return times(size, () => ({
+      letter: alphabet[Math.floor(Math.random() * alphabet.length)],
+      hits: 0,
+      powerup: PowerupType.NONE,
+    }));
+  });
+  return grid;
+}
+
+export function gameEventRollup(
+  state: RollupGameState,
+  event: GameEvent
+): RollupGameState
+{
   if (state.player !== event.targetPlayerId) {
-    // TODO print warning
+    return state;
   }
 
-  if (state.grid.length == 0) {
+  if (!state.grid || state.grid.length == 0) {
     if (event.action !== ActionType.INIT) {
-      throw new Error("Action ");
+      throw new Error("Uninitialized board");
     }
   }
 
-  return state;
+  if (event.action === ActionType.INIT) {
+    const size = state.game.boardSize;
+    state.grid = randomGrid(size);
+    return state;
+  } else {
+    throw new Error("Unknown event type");
+  }
 }
 
-export function gameEventRollupAll(player: string, events: GameEvent[]): GameState {
-  return events.reduceRight(gameEventRollup, initGameState(player));
+export function gameEventRollupAll(game: Game, player: string, events: GameEvent[]): GameState {
+  return events.reduceRight(gameEventRollup, initGameState(game, player));
 }
