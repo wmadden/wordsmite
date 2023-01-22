@@ -1,7 +1,6 @@
 import { collection, QueryDocumentSnapshot } from "firebase/firestore";
 import React, { useMemo } from "react";
 import { useFirestore, useFirestoreCollection } from "reactfire";
-import GameBoard from "../../components/GameBoard";
 import { gameEventsCollectionPath } from "../../firebase/firestorePathBuilders";
 import GameEventConverter from "../../models/dataConverters/GameEventConverter";
 import {
@@ -12,6 +11,7 @@ import {
   PowerupType,
 } from "../../models/Game";
 import times from "../../utilities/times";
+import GameBoard from "./GameBoard";
 
 export type GameInProgressProps = {
   game: QueryDocumentSnapshot<Game>;

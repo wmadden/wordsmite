@@ -1,7 +1,7 @@
 import { IonButton, IonCol, IonGrid, IonRow } from "@ionic/react";
 import { times } from "lodash";
 import React from "react";
-import { Game, GameState } from "../models/Game";
+import { Game, GameState } from "../../models/Game";
 
 import css from "./GameBoard.module.css";
 
