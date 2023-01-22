@@ -27,7 +27,7 @@ const GameNotStarted: React.FC<GameNotStartedProps> = ({
   const firestore = useFirestore();
 
   const onGameStartClick = useCallback(async () => {
-    await addDoc(
+    addDoc(
       collection(
         firestore,
         gameEventsCollectionPath({ gameId: game.id }),
@@ -36,21 +36,6 @@ const GameNotStarted: React.FC<GameNotStartedProps> = ({
         action: {
           type: ActionType.GAME_START,
           startedAt: serverTimestamp(),
-        },
-        createdAt: serverTimestamp(),
-        targetPlayerId,
-        creatorId: targetPlayerId,
-      },
-    );
-    addDoc(
-      collection(
-        firestore,
-        gameEventsCollectionPath({ gameId: game.id }),
-      ).withConverter(GameEventConverter),
-      {
-        action: {
-          type: ActionType.INIT,
-          grid: randomGrid(game.data().boardSize),
         },
         createdAt: serverTimestamp(),
         targetPlayerId,
@@ -77,11 +62,25 @@ const GameNotStarted: React.FC<GameNotStartedProps> = ({
     );
   }, [firestore, game, targetPlayerId]);
 
-  return !started ? (
-    <IonButton onClick={onGameStartClick}>START GAME</IonButton>
-  ) : !joined ? (
-    <IonButton onClick={onJoinGameClick}>JOIN GAME</IonButton>
-  ) : null;
+  if (!joined) {
+    return (
+      <>
+        Click to join the game
+        <br />
+        <IonButton onClick={onJoinGameClick}>JOIN GAME</IonButton>
+      </>
+    );
+  }
+  if (!started) {
+    return (
+      <>
+        Press this button to start the timer and begin the game for all players
+        <br />
+        <IonButton onClick={onGameStartClick}>START GAME</IonButton>
+      </>
+    );
+  }
+  return "?";
 };
 
 export default GameNotStarted;

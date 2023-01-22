@@ -10,7 +10,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, orderBy, query } from "firebase/firestore";
 import { arrowBackOutline } from "ionicons/icons";
 import React from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
@@ -71,21 +71,30 @@ const GamesDetailPage: React.FC = () => {
 
   const targetPlayerId = authUser?.uid;
 
-  const isLoaded = gameDoc.status === "success" && targetPlayerId;
-
   const gameEventsCollection = useFirestoreCollection(
-    collection(firestore, gameEventsCollectionPath({ gameId })).withConverter(
-      GameEventConverter,
+    query(
+      collection(firestore, gameEventsCollectionPath({ gameId })).withConverter(
+        GameEventConverter,
+      ),
+      orderBy("createdAt", "desc"),
     ),
   );
+  console.log(gameEventsCollection.data?.docs.map((doc) => doc.data()));
 
   const gameStartEvent = gameEventsCollection.data?.docs.find((eventDoc) => {
     return eventDoc.data().action.type === ActionType.GAME_START;
   });
 
   const initEvent = gameEventsCollection.data?.docs.find((eventDoc) => {
-    return eventDoc.data().action.type === ActionType.GAME_START;
+    return eventDoc.data().action.type === ActionType.INIT;
   });
+
+  console.log({ initEvent });
+
+  const isLoaded =
+    gameDoc.status === "success" &&
+    targetPlayerId &&
+    gameEventsCollection.status === "success";
 
   return (
     <IonPage>
@@ -119,6 +128,7 @@ const GamesDetailPage: React.FC = () => {
           ) : (
             <GameInProgress
               game={gameDoc.data}
+              gameEvents={gameEventsCollection.data.docs}
               authUserId={authUser.uid}
               {...{ targetPlayerId }}
               className={css.gameInProgress}

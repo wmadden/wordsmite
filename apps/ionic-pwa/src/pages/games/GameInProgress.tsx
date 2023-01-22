@@ -7,56 +7,31 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import React, { useCallback, useMemo } from "react";
-import { useFirestore, useFirestoreCollection } from "reactfire";
+import { useFirestore } from "reactfire";
 import { gameEventsCollectionPath } from "../../firebase/firestorePathBuilders";
 import GameEventConverter from "../../models/dataConverters/GameEventConverter";
 import {
   ActionType,
   Boom,
-  Cell,
+  CellCoordinate,
   Game,
   GameEvent,
+  gameEventRollupAll,
   GameState,
-  PowerupType,
 } from "../../models/Game";
-import times from "../../utilities/times";
 import GameBoard from "./GameBoard";
 import css from "./GameInProgress.module.css";
-import useHighlightedCellsState, {
-  CellCoordinate,
-} from "./useHighlightedCellsState";
+import useHighlightedCellsState from "./useHighlightedCellsState";
 
 export type GameInProgressProps = {
   game: QueryDocumentSnapshot<Game>;
   authUserId: string;
   targetPlayerId: string;
   className?: string;
+  gameEvents: QueryDocumentSnapshot<GameEvent>[];
 };
 
 const alphabet = [..."abcdefghijklmnopqrstuvwxyz"];
-
-function calculateGameState({
-  game,
-  gameEvents,
-}: {
-  game: QueryDocumentSnapshot<Game>;
-  gameEvents: QueryDocumentSnapshot<GameEvent>[];
-}): GameState {
-  // TODO: calculate me
-  const gameData = game.data();
-  const grid: Cell[][] = times(gameData.boardSize, () => {
-    return times(gameData.boardSize, () => ({
-      letter: alphabet[Math.floor(Math.random() * alphabet.length)],
-      hits: 0,
-      powerup: PowerupType.NONE,
-    }));
-  });
-  return {
-    grid,
-    words: [],
-    score: 0,
-  };
-}
 
 function countHits(gameState: GameState): number {
   let result = 0;
@@ -74,24 +49,17 @@ const GameInProgress: React.FC<GameInProgressProps> = ({
   className,
   targetPlayerId,
   authUserId,
+  gameEvents,
 }) => {
   const firestore = useFirestore();
-  const gameEventsCollection = useFirestoreCollection(
-    collection(
-      firestore,
-      gameEventsCollectionPath({ gameId: game.id }),
-    ).withConverter(GameEventConverter),
-  );
 
-  const gameState = useMemo(() => {
-    return (
-      game &&
-      calculateGameState({
-        game,
-        gameEvents: gameEventsCollection.data?.docs || [],
-      })
+  const gameState: GameState | undefined = useMemo(() => {
+    return gameEventRollupAll(
+      game.data(),
+      authUserId,
+      gameEvents.map((doc) => doc.data()),
     );
-  }, [game, gameEventsCollection.data]);
+  }, [authUserId, game, gameEvents]);
 
   const [presentToast] = useIonToast();
   const onWordHighlighted = useCallback(
