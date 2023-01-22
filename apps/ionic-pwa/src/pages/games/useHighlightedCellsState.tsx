@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dictEn from "../../data/dict-en.csv?raw";
-import { GameState } from "../../models/Game";
+import { CellCoordinate, GameState } from "../../models/Game";
 import useDeepEqualMemo from "../../utilities/hooks/useDeepEqualMemo";
-
-export type CellCoordinate = [number, number];
 
 export type HighlightedCellsState = {
   highlightedCells: CellCoordinate[];
@@ -41,15 +39,16 @@ export default function useHighlightedCellsState({
 
           const alreadyHighlighted = !!currentValue.find(
             (cell) =>
-              cell[0] === cellCoordinates[0] && cell[1] === cellCoordinates[1],
+              cell.row === cellCoordinates.row &&
+              cell.col === cellCoordinates.col,
           );
           if (alreadyHighlighted) return [];
 
           const permitted =
-            lastHighlightedCell[1] - 1 <= cellCoordinates[1] &&
-            lastHighlightedCell[1] + 1 >= cellCoordinates[1] &&
-            lastHighlightedCell[0] - 1 <= cellCoordinates[0] &&
-            lastHighlightedCell[0] + 1 >= cellCoordinates[0];
+            lastHighlightedCell.col - 1 <= cellCoordinates.col &&
+            lastHighlightedCell.col + 1 >= cellCoordinates.col &&
+            lastHighlightedCell.row - 1 <= cellCoordinates.row &&
+            lastHighlightedCell.row + 1 >= cellCoordinates.row;
 
           if (!permitted) return currentValue;
 
@@ -58,7 +57,7 @@ export default function useHighlightedCellsState({
 
         const newValue = calculateNewValue();
         const highlightedString = newValue
-          .map(([row, col]) => gridWithStableIdentity[row][col].letter)
+          .map(({ row, col }) => gridWithStableIdentity[row][col].letter)
           .join("");
 
         if (highlightedString && dictEnSet.has(highlightedString)) {
