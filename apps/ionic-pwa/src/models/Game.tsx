@@ -68,7 +68,7 @@ export interface GameStart extends BaseAction {
   startedAt: Timestamp,
 }
 
-export type Action = MakeWord | Detonate | Init | Ignore;
+export type Action = MakeWord | Detonate | Init | GameStart | Ignore;
 
 export interface GameEvent {
   createdAt: Timestamp;    // When server received, server timestamp is the source of truth for event ordering
