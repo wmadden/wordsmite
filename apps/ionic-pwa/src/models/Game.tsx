@@ -147,7 +147,7 @@ export function gameEventRollup(
       state.grid[row][col].hits += 1;
     }
 
-    if (event.action.word.length <= 4) {
+    if (word.length <= 4) {
       state.score += 1;
     } else if (word.length <= 5) {
       state.score += 2;
