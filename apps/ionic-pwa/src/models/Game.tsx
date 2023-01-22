@@ -5,7 +5,6 @@ import times from "../utilities/times";
 export interface Game {
   name: string;
   createdAt: Timestamp;
-  startedAt: Timestamp | null;
   boardSize: number;
   creatorId: string;
 }
@@ -62,6 +61,11 @@ export interface Init extends BaseAction {
 
 export interface Ignore extends BaseAction {
   type: ActionType.IGNORE,
+}
+
+export interface GameStart extends BaseAction {
+  type: ActionType.GAME_START,
+  startedAt: Timestamp,
 }
 
 export type Action = MakeWord | Detonate | Init | Ignore;
