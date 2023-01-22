@@ -12,11 +12,13 @@ import {
 } from "../../models/Game";
 import times from "../../utilities/times";
 import GameBoard from "./GameBoard";
+import useHighlightedCellsState from "./useHighlightedCellsState";
 
 export type GameInProgressProps = {
   game: QueryDocumentSnapshot<Game>;
   authUserId: string;
   targetPlayerId: string;
+  className?: string;
 };
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
@@ -45,7 +47,7 @@ function calculateGameState({
   };
 }
 
-const GameInProgress: React.FC<GameInProgressProps> = ({ game }) => {
+const GameInProgress: React.FC<GameInProgressProps> = ({ game, className }) => {
   const firestore = useFirestore();
   const gameEventsCollection = useFirestoreCollection(
     collection(
@@ -64,7 +66,20 @@ const GameInProgress: React.FC<GameInProgressProps> = ({ game }) => {
     );
   }, [game, gameEventsCollection.data]);
 
-  return <GameBoard game={game.data()} gameState={gameState} />;
+  const highlightedCellsState = useHighlightedCellsState();
+
+  return (
+    <div
+      onClick={highlightedCellsState.clearHighlightedCells}
+      {...{ className }}
+    >
+      <GameBoard
+        game={game.data()}
+        gameState={gameState}
+        {...{ highlightedCellsState }}
+      />
+    </div>
+  );
 };
 
 export default GameInProgress;

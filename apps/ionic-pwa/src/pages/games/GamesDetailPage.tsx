@@ -123,6 +123,7 @@ const GamesDetailPage: React.FC = () => {
               game={gameDoc.data}
               authUserId={authUser.uid}
               {...{ targetPlayerId }}
+              className={css.gameInProgress}
             />
           )}
         </IonContent>

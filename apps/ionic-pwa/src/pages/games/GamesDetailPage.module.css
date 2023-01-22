@@ -8,3 +8,7 @@
 .centeredContent {
   align-self: center;
 }
+
+.gameInProgress {
+  height: 100%;
+}
