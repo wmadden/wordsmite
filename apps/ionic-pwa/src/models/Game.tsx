@@ -64,7 +64,7 @@ export interface Ignore extends BaseAction {
   type: ActionType.IGNORE,
 }
 
-type Action = MakeWord | Detonate | Init | Ignore;
+export type Action = MakeWord | Detonate | Init | Ignore;
 
 export interface GameEvent {
   createdAt: Timestamp;    // When server received, server timestamp is the source of truth for event ordering
@@ -142,7 +142,7 @@ export function gameEventRollup(
     for (const [row, col] of event.action.letterPositions) {
       state.grid[row][col].hits += 1;
     }
-    // TODO update score
+    state.score += 1; // FIXME
     return state;
   } else if (event.action.type === ActionType.DETONATE) {
     for (const {pos: [row, col], letter} of event.action.replacements) {
@@ -153,6 +153,8 @@ export function gameEventRollup(
       cell.hits = 0;
       cell.letter = letter;
     }
+    return state;
+  } else if (event.action.type === ActionType.IGNORE) {
     return state;
   } else {
     throw new Error("Unhandled event type");

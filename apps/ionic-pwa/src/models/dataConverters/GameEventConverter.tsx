@@ -6,18 +6,31 @@ import {
 import {
   getValue,
   getString,
-  getStringLiteral,
+  isPermittedValue,
   isDocumentData,
   StrictDocumentData,
 } from "../../utilities/firebase/firestore/dataHelpers";
 import getTimestamp from "../../utilities/firebase/firestore/getTimestamp";
-import { ActionType, GameEvent, GameState, gameEventActionValues } from "../Game";
+
+import {
+  Action,
+  ActionType,
+  GameEvent,
+  GameState,
+  gameEventActionValues,
+} from "../Game";
 
 function isStateCheck(value: unknown): value is GameState {
   return (isDocumentData(value) &&
     Array.isArray(value.grid)  &&
     Array.isArray(value.words) &&
     typeof value.score === "number");
+}
+
+const isActionTypeValue = isPermittedValue(gameEventActionValues);
+
+function isActionCheck(value: unknown): value is Action {
+  return (isDocumentData(value) && isActionTypeValue(value.type));
 }
 
 function gameEventToFirestoreData(
@@ -30,9 +43,9 @@ function firestoreDataToGame(data: StrictDocumentData): GameEvent {
   return {
     creatorId: getString(data.creatorId),
     createdAt: getTimestamp(data.createdAt),
-    action: getStringLiteral(data.action, {
-      permitted: gameEventActionValues,
-      fallback: ActionType.IGNORE,
+    action: getValue(data.action, {
+      typeCheck: isActionCheck,
+      fallback: { type: ActionType.IGNORE }
     }),
     targetPlayerId: getString(data.targetPlayerId),
     currentState: getValue(data.currentState, {
