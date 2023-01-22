@@ -49,6 +49,11 @@ service cloud.firestore { match /databases/{database}/documents {
   match /Games/{gameId} {
     allow read;
     allow create; // TODO: validate structure
+
+    match /GameEvents/{gameEventId} {
+      allow read;
+      allow create; // TODO: validate structure
+    }
   }
 
   match /UserProfiles/{userId} {
