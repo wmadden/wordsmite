@@ -11,7 +11,6 @@ function testGame(): Game {
   return {
     name: "Test Game",
     createdAt: Timestamp.now(),
-    startedAt: Timestamp.now(),
     boardSize: 4,
     creatorId: player1,
   };
