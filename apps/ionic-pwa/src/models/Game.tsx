@@ -35,9 +35,40 @@ export interface Cell {
   powerup: PowerupType;  // Powerup contained in this cell
 }
 
+export interface Boom {
+  pos: [number, number],
+  letter: string,
+}
+
+export interface BaseAction {
+  type: ActionType
+}
+
+export interface MakeWord extends BaseAction {
+  type: ActionType.MAKE_WORD,
+  word: string,
+  letterPositions: [number, number][];
+}
+
+export interface Detonate extends BaseAction {
+  type: ActionType.DETONATE,
+  replacements: Boom[]
+}
+
+export interface Init extends BaseAction {
+  type: ActionType.INIT,
+  grid: string[][]
+}
+
+export interface Ignore extends BaseAction {
+  type: ActionType.IGNORE,
+}
+
+type Action = MakeWord | Detonate | Init | Ignore;
+
 export interface GameEvent {
   createdAt: Timestamp;    // When server received, server timestamp is the source of truth for event ordering
-  action: ActionType;
+  action: Action;
   targetPlayerId: string;  // Player whos game state this event applies to (will be the same as creator except for powerups)
   creatorId: string;       // Who created this event
   currentState: GameState;
@@ -64,17 +95,28 @@ function initGameState(game: Game, player: string): RollupGameState {
   };
 }
 
+function randomLetter(): string {
+  return alphabet[Math.floor(Math.random() * alphabet.length)];
+}
+
 const alphabet = [..."abcdefghijklmnopqrstuvwxyz"];
 
 export function randomGrid(size: number): Cell[][] {
-  const grid: Cell[][] = times(size, () => {
+  return times(size, () => {
     return times(size, () => ({
-      letter: alphabet[Math.floor(Math.random() * alphabet.length)],
+      letter: randomLetter(),
       hits: 0,
       powerup: PowerupType.NONE,
     }));
   });
-  return grid;
+}
+
+export function buildCellGrid(letters: string[][]) {
+  return letters.map(row => row.map(s => ({
+    letter: s,
+    hits: 0,
+    powerup: PowerupType.NONE,
+  })));
 }
 
 export function gameEventRollup(
@@ -87,20 +129,41 @@ export function gameEventRollup(
   }
 
   if (!state.grid || state.grid.length == 0) {
-    if (event.action !== ActionType.INIT) {
+    if (event.action.type !== ActionType.INIT) {
       throw new Error("Uninitialized board");
     }
   }
 
-  if (event.action === ActionType.INIT) {
-    const size = state.game.boardSize;
-    state.grid = randomGrid(size);
+  if (event.action.type === ActionType.INIT) {
+    state.grid = buildCellGrid(event.action.grid);
+    return state;
+  } else if (event.action.type === ActionType.MAKE_WORD) {
+    state.words.push(event.action.word);
+    for (const [row, col] of event.action.letterPositions) {
+      state.grid[row][col].hits += 1;
+    }
+    // TODO update score
+    return state;
+  } else if (event.action.type === ActionType.DETONATE) {
+    for (const {pos: [row, col], letter} of event.action.replacements) {
+      let cell = state.grid[row][col];
+      if (cell.hits == 0) {
+        throw new Error("Tried to replace unused letter");
+      }
+      cell.hits = 0;
+      cell.letter = letter;
+    }
     return state;
   } else {
-    throw new Error("Unknown event type");
+    throw new Error("Unhandled event type");
   }
 }
 
-export function gameEventRollupAll(game: Game, player: string, events: GameEvent[]): GameState {
+export function gameEventRollupAll(
+  game: Game,
+  player: string,
+  events: GameEvent[]
+): GameState
+{
   return events.reduceRight(gameEventRollup, initGameState(game, player));
 }
