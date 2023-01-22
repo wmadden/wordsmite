@@ -138,7 +138,9 @@ export function gameEventRollup(
   }
 
   if (!state.grid || state.grid.length == 0) {
-    if (event.action.type !== ActionType.INIT) {
+    if (!(
+      event.action.type === ActionType.INIT ||
+      event.action.type === ActionType.GAME_START)) {
       throw new Error("Uninitialized board");
     }
   }
